@@ -1,0 +1,6 @@
+marker-pdf
+transformers>=4.51.0
+chromadb
+sacrebleu 
+rouge-score
+python-dotenv
