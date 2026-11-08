@@ -32,7 +32,7 @@ The generator is loaded in `float16` with `device_map="auto"`, so it uses a GPU 
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - A Hugging Face account and access token
 - Approved access to the gated Llama model: request it on the [Llama-3.2-3B-Instruct page](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct)
 - A CUDA-capable GPU is recommended
