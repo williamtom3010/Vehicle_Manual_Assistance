@@ -4,3 +4,5 @@ chromadb
 sacrebleu 
 rouge-score
 python-dotenv
+langchain-community
+unstructured

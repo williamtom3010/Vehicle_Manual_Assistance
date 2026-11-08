@@ -17,17 +17,9 @@ os.makedirs(INDEX_DIR, exist_ok=True)
 
 # extract data
 
-
-# converter = PdfConverter(
-#     artifact_dict=create_model_dict(),
-# )
-# rendered = converter("DATA_DIR")
-# text, _, images = text_from_rendered(rendered)
-
-
 config = {
     "output_format": "markdown",
-    # "ADDITIONAL_KEY": "VALUE"
+    "disable_ocr": True
 }
 config_parser = ConfigParser(config)
 
@@ -48,6 +40,20 @@ os.makedirs("data", exist_ok=True)
 extracted_text_data_path = "data/text_data.md"
 with open(extracted_text_data_path, "w", encoding="utf-8") as f:
     f.write(text)
+
+# save the image data to folder
+
+images_dir = "/content/drive/MyDrive/rag_project/data/images"
+
+os.makedirs(images_dir, exist_ok=True)
+
+for filename, image in images.items():
+
+    image_path = os.path.join(images_dir, filename)
+
+    image.save(image_path)
+
+print(f"Successfully saved {len(images)} images!")
 
 # load the the .md file
 

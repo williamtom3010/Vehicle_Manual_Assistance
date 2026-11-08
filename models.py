@@ -7,26 +7,27 @@ import os
 from dotenv import load_dotenv
 
 # Load model directly
+
 load_dotenv()
-HF_TOKEN = os.getenv("HF_TOKEN")
-login(HF_TOKEN)
+HF_READ_TOKEN = os.getenv("HF_READ_TOKEN")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using device:", device)
 
 def load_generator_model():
     
-    model_path ="meta-llama/Llama-3.2-3B-Instruct"
+    gen_model_path ="meta-llama/Llama-3.2-3B-Instruct"
     generator_model = AutoModelForCausalLM.from_pretrained(
-        model_path,
+        gen_model_path,
         torch_dtype=torch.float16,
         # quantization_config=bnb_config,
         device_map="auto"
     )
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("Using device:", device)
+    
     # model = model.to(device)
     print("Model has been loaded")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(gen_model_path)
     print("Tokenizer has been loaded")
 
     return generator_model,tokenizer
@@ -82,6 +83,11 @@ def gen_ans(query,context):
 
 
 def load_embedding_model():
-    embedding_model = SentenceTransformer("Qwen/Qwen3-Embedding-4B")
+    embedding_model_path = "Qwen/Qwen3-Embedding-0.6B"
+    embedding_model = SentenceTransformer(
+        embedding_model_path,
+        device=device
+        )
+
     print("Embedding dim:", embedding_model.get_sentence_embedding_dimension())
     return embedding_model
