@@ -5,11 +5,11 @@ import pandas as pd
 import chromadb 
 import models
 from rouge_score import rouge_scorer  
-import sacrebleu  
+import sacrebleu
 
 
-benchmark_dataset_path = "data/Fronx_2024_RAG_Evaluation_Dataset_50.csv"
-INDEX_DIR  = "fronx_manual_vector_db"
+benchmark_dataset_path = "Vehicle_Manual_Assistance/data/test_dataset/Fronx_2024_RAG_Evaluation_Dataset_50.csv"
+INDEX_DIR  = "Vehicle_Manual_Assistance/data/fronx_manual_vector_db"
 
 # choose embedding model
 embedding_model = models.load_embedding_model()
@@ -52,7 +52,6 @@ def retrival_eval(K):
         retrieved_words = set()
         flags = []
         relevant_count = 0
-
         
         for c in chunks:
                 # recall
@@ -79,46 +78,44 @@ def retrival_eval(K):
 
 
 
-# evaluation metrics 
+################################################# evaluation metrics  ####################################################
 # Generation evaluation metrics
 # choose generation model
 
+def generate_answer(question, k=4):
+    # retrieve
+    q_emb = embedding_model.encode([question], prompt_name="query", normalize_embeddings=True)
+    res = collection.query(query_embeddings=q_emb.tolist(), n_results=k)
+    docs = res["documents"][0]
+
+    context = "\n\n".join(f"[{i+1}] {d}" for i, d in enumerate(docs))
+
+    # answer = models.gen_ans(question,context)
+    answer = models.gen_ans(question,context)
+    return answer, docs
+
+
+
+
+answers, contexts = [], []
+i=1
+for q in df["question"]:
+    a, ctx = generate_answer(q)
+    answers.append(a)
+    contexts.append(ctx)
+    print(f"Generating answer number : {i}")
+    i=i+1
+
+df["generated_answer"] = answers
+df["contexts"] = contexts
+df.to_csv("generation_outputs.csv", index=False) 
+
 def gen_eval():
-    def generate_answer(question, k=4):
-        # retrieve
-        q_emb = embedding_model.encode([question], prompt_name="query", normalize_embeddings=True)
-        res = collection.query(query_embeddings=q_emb.tolist(), n_results=k)
-        docs = res["documents"][0]
-
-        context = "\n\n".join(f"[{i+1}] {d}" for i, d in enumerate(docs))
-
-        answer = models.gen_ans(question,context)
-        return answer, docs
-
-
-
-
-    df = df.dropna(subset=["question", "expected_answer"]).reset_index(drop=True)
-
-    answers, contexts = [], []
-    for q in df["question"]:
-        a, ctx = generate_answer(q)
-        answers.append(a)
-        contexts.append(ctx)
-
-    df["generated_answer"] = answers
-    df["contexts"] = contexts
-    df.to_csv("generation_outputs.csv", index=False) 
-
-
-    # ===========================================
-
-
     # rouge and blue
 
     scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
 
-    bleu_scores, r1_scores, rl_scores, r2_scores = [], [], []
+    bleu_scores, r1_scores, rl_scores, r2_scores = [], [], [], []
     for ref, hyp in zip(df["expected_answer"], df["generated_answer"]):
         bleu_scores.append(sacrebleu.sentence_bleu(hyp, [ref]).score / 100)   # 0 to 1
         r = scorer.score(ref, hyp)            # order: (reference, generated)
@@ -126,8 +123,8 @@ def gen_eval():
         r2_scores.append(r["rouge2"].fmeasure)
         rl_scores.append(r["rougeL"].fmeasure)
 
-    df["bleu"], df["rouge1"], df["rougeL"] = bleu_scores, r1_scores, rl_scores
-    print(df[["bleu", "rouge1", "rougeL"]].mean().round(3))
+    df["bleu"], df["rouge1"], df["rouge2"], df["rougeL"] = bleu_scores, r1_scores, r2_scores, rl_scores
+    print(df[["bleu", "rouge1", "rouge2","rougeL"]].mean().round(3))
 
     # Answer Relevance and Answer Correctness
 

@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 HF_READ_TOKEN = os.getenv("HF_READ_TOKEN")
+login(HF_READ_TOKEN)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:", device)
 
@@ -21,10 +22,8 @@ def load_generator_model():
         torch_dtype=torch.float16,
         # quantization_config=bnb_config,
         device_map="auto"
-    )
-
-    
-    # model = model.to(device)
+    )    
+    # generator_model = generator_model.to(device)
     print("Model has been loaded")
 
     tokenizer = AutoTokenizer.from_pretrained(gen_model_path)
@@ -32,12 +31,9 @@ def load_generator_model():
 
     return generator_model,tokenizer
 
-
 generator_model,tokenizer = load_generator_model()
 
-
 def gen_ans(query,context):
-
     
     generator_model.eval()
     

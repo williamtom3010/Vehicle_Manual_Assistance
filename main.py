@@ -11,8 +11,12 @@ import models
 
 
 # get data
-DATA_DIR   = "data/YTB-Fronx_99011M74T04-74W.pdf"
-INDEX_DIR  = "fronx_manual_vector_db"
+DATA_DIR   = "Vehicle_Manual_Assistance/data/input_dataset_pdf/YTB-Fronx_99011M74T04-74W.pdf"
+INDEX_DIR  = "Vehicle_Manual_Assistance/data/fronx_manual_vector_db"
+extracted_text_data_path = "Vehicle_Manual_Assistance/data/extracted_data/text_data.md"
+images_dir = "Vehicle_Manual_Assistance/data/images"
+
+
 os.makedirs(INDEX_DIR, exist_ok=True)
 
 # extract data
@@ -37,26 +41,19 @@ text, _, images = text_from_rendered(rendered)
 
 # save the text data to folder
 os.makedirs("data", exist_ok=True)
-extracted_text_data_path = "data/text_data.md"
 with open(extracted_text_data_path, "w", encoding="utf-8") as f:
     f.write(text)
 
+
 # save the image data to folder
-
-images_dir = "/content/drive/MyDrive/rag_project/data/images"
-
 os.makedirs(images_dir, exist_ok=True)
-
 for filename, image in images.items():
-
     image_path = os.path.join(images_dir, filename)
-
     image.save(image_path)
 
 print(f"Successfully saved {len(images)} images!")
 
 # load the the .md file
-
 loader = UnstructuredMarkdownLoader(extracted_text_data_path, mode='elements')
 data_md = loader.load()
 
@@ -66,7 +63,6 @@ print(data_md[1].metadata)
 
 
 # chunk data
-
 loader = TextLoader(extracted_text_data_path, encoding="utf-8")
 documents = loader.load()
 splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
@@ -113,8 +109,6 @@ print("Stored:", collection.count())
 query = "How to switch of the automatic engine start stop feature  ?"
 
 # query embed
-
-
 q_emb = embedding_model.encode([query], prompt_name="query", normalize_embeddings=True)
 
 n_chunks = 4
@@ -135,15 +129,12 @@ context = "\n\n".join(
 # Compute the (cosine) similarity between the query and document embeddings
 # retrieve information related to query
 similarity = embedding_model.similarity(q_emb, document_embeddings)
+
 print("Similarity : ",similarity)
-
-
 print("No of Retrieved Chunks : ",len(res["documents"][0]))   # 4  (four chunks)
 print("Retrieved Chunks are \n\n : ",docs)
 
 
-
 # prompt the generation model
-
 answer = models.gen_ans(query,context)
 print(answer)
